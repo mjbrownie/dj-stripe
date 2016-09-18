@@ -2,6 +2,7 @@
 from django.conf import settings
 from django.core.urlresolvers import resolve
 from django.shortcuts import redirect
+from django.core.exceptions import ImproperlyConfigured
 
 import fnmatch
 
@@ -92,5 +93,8 @@ class SubscriptionPaymentMiddleware(object):
 
         subscriber = subscriber_request_callback(request)
 
-        if not subscriber_has_active_subscription(subscriber):
-            return redirect(DJSTRIPE_SUBSCRIPTION_REDIRECT)
+        try:
+            if not subscriber_has_active_subscription(subscriber):
+                return redirect(DJSTRIPE_SUBSCRIPTION_REDIRECT)
+        except ImproperlyConfigured:
+            return redirect("%s?next=%s" % (settings.LOGIN_URL, request.path))
